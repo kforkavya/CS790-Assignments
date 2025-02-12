@@ -2,6 +2,7 @@
 #include <sys/module.h>
 #include <sys/kernel.h>
 #include <sys/socket.h>
+#include <sys/mbuf.h>
 #include <net/if.h>
 #include <netinet/in.h>
 #include <netinet/ip.h>
