@@ -17,7 +17,7 @@ static int register_custom_pfil_head(void) {
         .pa_version = PFIL_VERSION,
         .pa_flags = PFIL_IN | PFIL_OUT,
         .pa_type = PFIL_TYPE_IP4,
-        .pa_name = "custom_ipv4_head"
+        .pa_headname = "custom_ipv4_head"
     };
 
     custom_pfil_head = pfil_head_register(&pha);
