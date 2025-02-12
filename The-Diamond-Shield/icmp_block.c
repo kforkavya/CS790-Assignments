@@ -73,8 +73,7 @@ static int load_handler(module_t mod, int event_type, void *arg) {
                 return EFAULT;
             }
 
-            if (icmp_hook != NULL)
-                printf("ICMP Block Module loaded successfully.\n");
+            printf("ICMP Block Module loaded successfully.\n");
             break;
 
         case MOD_UNLOAD:
