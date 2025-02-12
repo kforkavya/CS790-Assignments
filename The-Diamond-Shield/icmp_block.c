@@ -14,7 +14,7 @@ static unsigned int total_dropped_size = 0;
 
 // Packet filter hook function
 static pfil_return_t icmp_block_hook(pfil_packet_t pkt, struct ifnet *ifp, int dir, void *arg, struct inpcb *inp) {
-    struct mbuf *m = (struct mbuf *)pkt;
+    struct mbuf *m = *(pkt.m);  // Correctly dereference to get the mbuf
 
     if (m == NULL) return PFIL_PASS;  // Allow packet if invalid
     if (dir != PFIL_IN) return PFIL_PASS;  // Only filter incoming packets
@@ -49,7 +49,7 @@ static int load_handler(module_t mod, int event_type, void *arg) {
             pha.pa_modname = "icmp_block_mod";
             pha.pa_rulname = "icmp_block_rule";
 
-            icmp_hook = pfil_add_hook(&pha);  // Direct registration
+            icmp_hook = pfil_add_hook(&pha);  // Register the hook
             if (icmp_hook != NULL) {
                 printf("ICMP Block Module loaded successfully.\n");
             } else {
