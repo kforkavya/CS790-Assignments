@@ -6,7 +6,7 @@
 #include <netinet/in.h>
 #include <netinet/ip.h>
 #include <netinet/ip_icmp.h>
-#include <net/pfil.h>
+#include <net/pfil.c>
 #include <sys/mbuf.h>
 
 static unsigned int icmp_dropped = 0;
@@ -23,7 +23,7 @@ static pfil_return_t icmp_block_hook(pfil_packet_t pkt, struct ifnet *ifp, int d
     m = *(pkt.m);
     if (m == NULL) return PFIL_PASS;
 
-    if (dir != NULL) return PFIL_PASS;  // Only process incoming packets
+    if (dir != PFIL_IN) return PFIL_PASS;  // Only process incoming packets
 
     ip_hdr = mtod(m, struct ip *);
     if (ip_hdr->ip_p == IPPROTO_ICMP) {
