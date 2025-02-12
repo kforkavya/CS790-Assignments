@@ -14,6 +14,8 @@ static unsigned int total_dropped_size = 0;
 
 /* Hook Function */
 static pfil_return_t icmp_block_hook(pfil_packet_t pkt, struct ifnet *ifp, int dir, void *arg, struct inpcb *inp) {
+    printf("ICMP Block Hook says Hi\n");
+
     struct mbuf *m = *(pkt.m);
     if (m == NULL) return PFIL_PASS;
 
@@ -42,8 +44,6 @@ static int load_handler(module_t mod, int event_type, void *arg) {
 
     switch (event_type) {
         case MOD_LOAD:
-            printf("Loading ICMP Block Module...\n");
-
             pha.pa_version = PFIL_VERSION;
             pha.pa_flags = PFIL_IN | PFIL_HEADPTR;
             pha.pa_type = PFIL_TYPE_IP4;
