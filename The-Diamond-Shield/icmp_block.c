@@ -8,7 +8,6 @@
 #include <netinet/ip_icmp.h>
 #include <net/pfil.h>
 #include <sys/mbuf.h>
-#include <string.h>
 
 static unsigned int icmp_dropped = 0;
 static unsigned int total_dropped_size = 0;
