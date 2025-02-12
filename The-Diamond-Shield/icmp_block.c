@@ -23,7 +23,7 @@ static pfil_return_t icmp_block_hook(pfil_packet_t pkt, struct ifnet *ifp, int d
     m = *(pkt.m);
     if (m == NULL) return PFIL_PASS;
 
-    if (dir != PLIF_IN) return PFIL_PASS;  // Only process incoming packets
+    if (dir != PFIL_IN) return PFIL_PASS;  // Only process incoming packets
 
     ip_hdr = mtod(m, struct ip *);
     if (ip_hdr->ip_p == IPPROTO_ICMP) {
