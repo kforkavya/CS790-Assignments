@@ -23,6 +23,8 @@ static pfil_return_t icmp_block_hook(pfil_packet_t pkt, struct ifnet *ifp, int d
     if (ip_hdr->ip_p == IPPROTO_ICMP) {
         struct icmp *icmp_hdr = (struct icmp *)(ip_hdr + 1);
 
+        printf("ICMP packet received. Type: %u, Code: %u\n", icmp_hdr->icmp_type, icmp_hdr->icmp_code);
+
         if (icmp_hdr->icmp_type == ICMP_ECHO) {  // Block ICMP Echo Requests
             icmp_dropped++;
             total_dropped_size += ntohs(ip_hdr->ip_len);
