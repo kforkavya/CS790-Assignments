@@ -20,6 +20,8 @@ static pfil_return_t icmp_block_hook(pfil_packet_t pkt, struct ifnet *ifp, int d
     if (dir != PFIL_IN) return PFIL_PASS;  // Only filter incoming packets
 
     struct ip *ip_hdr = mtod(m, struct ip *);
+    printf("IP packet received. Protocol: %u, Source: %s, Destination: %s\n",
+           ip_hdr->ip_p, inet_ntoa(ip_hdr->ip_src), inet_ntoa(ip_hdr->ip_dst));
     if (ip_hdr->ip_p == IPPROTO_ICMP) {
         struct icmp *icmp_hdr = (struct icmp *)(ip_hdr + 1);
 
