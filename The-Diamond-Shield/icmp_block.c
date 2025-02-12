@@ -8,6 +8,7 @@
 #include <netinet/ip_icmp.h>
 #include <net/pfil.h>
 #include <sys/mbuf.h>
+#include <string.h>
 
 static unsigned int icmp_dropped = 0;
 static unsigned int total_dropped_size = 0;
@@ -59,14 +60,14 @@ static int load_handler(module_t mod, int event_type, void *arg) {
 
             icmp_hook = pfil_add_hook(&pha);
 
-            if (icmp == NULL) {
+            if (icmp_hook == NULL) {
                 printf("Failed to register ICMP block hook.\n");
                 return EFAULT;
             }
 
-            req.pio_name = "inet";
-            req.pio_module = pha.pa_modname;
-            req.pio_ruleset = pha.pa_rulname;
+            strcpy(req.pio_name, "inet");
+            strcpy(req.pio_module, pha.pa_modname);
+            strcpy(req.pio_ruleset, pha.pa_rulname);
             req.pio_flags = PFIL_IN | PFIL_OUT;
 
             if (pfilioc_link(&req) != 0) {
