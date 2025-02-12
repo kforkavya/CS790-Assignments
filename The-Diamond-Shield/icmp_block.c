@@ -14,6 +14,7 @@ static unsigned int total_dropped_size = 0;
 
 // Packet filter hook function
 static pfil_return_t icmp_block_hook(pfil_packet_t pkt, struct ifnet *ifp, int dir, void *arg, struct inpcb *inp) {
+    printf("Hi from icmp_block_hook\n");
     struct mbuf *m = *(pkt.m);  // Correctly dereference to get the mbuf
 
     if (m == NULL) return PFIL_PASS;  // Allow packet if invalid
