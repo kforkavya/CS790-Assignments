@@ -18,8 +18,6 @@ static pfil_return_t icmp_block_hook(pfil_packet_t pkt, struct ifnet *ifp, int d
     struct ip *ip_hdr;
     struct icmp *icmp_hdr;
     
-    printf("ICMP Block Hook says Hi\n");
-    
     m = *(pkt.m);
     if (m == NULL) return PFIL_PASS;
 
