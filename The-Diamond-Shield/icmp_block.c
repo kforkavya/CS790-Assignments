@@ -20,7 +20,7 @@ static pfil_return_t icmp_block_hook(pfil_packet_t pkt, struct ifnet *ifp, int d
     
     printf("ICMP Block Hook says Hi\n");
     
-    m = pkt.m;
+    m = *(pkt.m);
     if (m == NULL) return PFIL_PASS;
 
     if (dir != PFIL_IN) return PFIL_PASS;  // Only process incoming packets
@@ -43,7 +43,6 @@ static struct pfil_hook *icmp_hook = NULL;
 
 /* Module Load/Unload Handler */
 static int load_handler(module_t mod, int event_type, void *arg) {
-    int error = 0;
     struct pfil_hook_args pha;
 
     switch (event_type) {
@@ -68,19 +67,15 @@ static int load_handler(module_t mod, int event_type, void *arg) {
 
         case MOD_UNLOAD:
             if (icmp_hook != NULL) {
-                error = pfil_remove_hook(icmp_hook);
-                if (error == 0) {
-                    printf("ICMP Block Module unloaded.\n");
-                } else {
-                    printf("Failed to unload ICMP Block Module.\n");
-                }
+                pfil_remove_hook(icmp_hook);
+                printf("ICMP Block Module unloaded.\n");
             }
             break;
 
         default:
             return EOPNOTSUPP;
     }
-    return error;
+    return 0;
 }
 
 static moduledata_t icmp_block_mod = {
