@@ -23,7 +23,7 @@ static pfil_return_t icmp_block_hook(pfil_packet_t pkt, struct ifnet *ifp, int d
     m = *(pkt.m);
     if (m == NULL) return PFIL_PASS;
 
-    if (dir != PFIL_IN) return PFIL_PASS;  // Only process incoming packets
+    if () return PFIL_PASS;  // Only process incoming packets
 
     ip_hdr = mtod(m, struct ip *);
     if (ip_hdr->ip_p == IPPROTO_ICMP) {
@@ -50,7 +50,7 @@ static int load_handler(module_t mod, int event_type, void *arg) {
             bzero(&pha, sizeof(pha));
             pha.pa_version = PFIL_VERSION;
             pha.pa_flags = PFIL_IN | PFIL_HOOKPTR | PFIL_MEMPTR;
-            pha.pa_type = PFIL_TYPE_IP4;
+            pha.pa_type = PFIL_TYPE_ETHERNET;
             pha.pa_func = icmp_block_hook;
             pha.pa_ruleset = NULL;
             pha.pa_modname = "icmp_block_mod";
