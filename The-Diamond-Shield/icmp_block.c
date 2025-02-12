@@ -9,106 +9,92 @@
 #include <net/pfil.h>
 #include <sys/mbuf.h>
 
-static struct pfil_head *custom_pfil_head = NULL;
-
-/* Register a PFIL head */
-static int register_custom_pfil_head(void) {
-    struct pfil_head_args pha = {
-        .pa_version = PFIL_VERSION,
-        .pa_flags = PFIL_IN | PFIL_OUT,
-        .pa_type = PFIL_TYPE_IP4,
-        .pa_headname = "custom_ipv4_head"
-    };
-
-    custom_pfil_head = pfil_head_register(&pha);
-    if (custom_pfil_head == NULL) {
-        printf("Failed to register custom PFIL head.\n");
-        return EFAULT;
-    }
-
-    printf("Custom PFIL head registered.\n");
-    return 0;
-}
-
 static unsigned int icmp_dropped = 0;
+static unsigned int total_dropped_size = 0;
 
-static pfil_return_t icmp_block_hook(pfil_packet_t pkt, struct ifnet *ifp, int dir,
-                                     void *arg, struct inpcb *inp) {
-    struct mbuf *m = pkt.m ? *(pkt.m) : NULL;
-    if (!m || dir != PFIL_IN) return PFIL_PASS;
+/* Hook Function */
+static pfil_return_t icmp_block_hook(pfil_packet_t pkt, struct ifnet *ifp, int dir, void *arg, struct inpcb *inp) {
+    struct mbuf *m;
+    struct ip *ip_hdr;
+    struct icmp *icmp_hdr;
+    
+    printf("ICMP Block Hook says Hi\n");
+    
+    m = *(pkt.m);
+    if (m == NULL) return PFIL_PASS;
 
-    struct ip *ip_hdr = mtod(m, struct ip *);
+    if (dir != NULL) return PFIL_PASS;  // Only process incoming packets
+
+    ip_hdr = mtod(m, struct ip *);
     if (ip_hdr->ip_p == IPPROTO_ICMP) {
-        struct icmp *icmp_hdr = (struct icmp *)(ip_hdr + 1);
-        if (icmp_hdr->icmp_type == ICMP_ECHO) {
+        icmp_hdr = (struct icmp *)((char *)ip_hdr + (ip_hdr->ip_hl << 2));
+        if (icmp_hdr->icmp_type == ICMP_ECHO) {  // Echo Request
             icmp_dropped++;
-            printf("ICMP Echo Request blocked. Total blocked: %u\n", icmp_dropped);
-            return PFIL_DROPPED;
+            total_dropped_size += ntohs(ip_hdr->ip_len);
+            printf("ICMP Echo Request blocked. Total dropped: %u, Total size: %u bytes\n",
+                   icmp_dropped, total_dropped_size);
+            return PFIL_DROPPED;  // Drop the packet
         }
     }
-    return PFIL_PASS;
+    return PFIL_PASS;  // Allow other packets
 }
 
 static struct pfil_hook *icmp_hook = NULL;
 
-static int attach_icmp_hook(void) {
-    if (!custom_pfil_head) return EINVAL;  // Ensure head is registered
+/* Module Load/Unload Handler */
+static int load_handler(module_t mod, int event_type, void *arg) {
+    struct pfil_hook_args pha;
+    struct pfilioc_link req;
 
-    struct pfil_hook_args pha = {
-        .pa_version = PFIL_VERSION,
-        .pa_flags = PFIL_IN,
-        .pa_type = PFIL_TYPE_IP4,
-        .pa_func = icmp_block_hook,
-        .pa_modname = "icmp_block_mod",
-        .pa_rulname = "icmp_block_rule"
-    };
-
-    icmp_hook = pfil_add_hook(&pha);
-    if (icmp_hook == NULL) {
-        printf("Failed to attach ICMP block hook.\n");
-        return EFAULT;
-    }
-
-    printf("ICMP block hook attached.\n");
-    return 0;
-}
-
-static int module_handler(module_t mod, int event, void *arg) {
-    int error = 0;
-
-    switch (event) {
+    switch (event_type) {
         case MOD_LOAD:
-            error = register_custom_pfil_head();
-            if (error) break;
+            bzero(&pha, sizeof(pha));
+            pha.pa_version = PFIL_VERSION;
+            pha.pa_flags = PFIL_IN;
+            pha.pa_type = PFIL_TYPE_IP4;
+            pha.pa_func = icmp_block_hook;
+            pha.pa_ruleset = NULL;
+            pha.pa_modname = "icmp_block_mod";
+            pha.pa_rulname = "icmp_block_rule";
 
-            error = attach_icmp_hook();
-            if (error) {
-                pfil_head_unregister(custom_pfil_head);
-                custom_pfil_head = NULL;
+            icmp_hook = pfil_add_hook(&pha);
+
+            if (icmp == NULL) {
+                printf("Failed to register ICMP block hook.\n");
+                return EFAULT;
             }
+
+            req.pio_name = "inet";
+            req.pio_module = pha.pa_modname;
+            req.pio_ruleset = pha.pa_rulname;
+            req.pio_flags = PFIL_IN | PFIL_OUT;
+
+            if (pfilioc_link(&req) != 0) {
+                printf("Failed to link ICMP block hook.\n");
+                pfil_remove_hook(icmp_hook);
+                return EFAULT;
+            }
+
+            if (icmp_hook != NULL)
+                printf("ICMP Block Module loaded successfully.\n");
             break;
 
         case MOD_UNLOAD:
-            if (icmp_hook) {
+            if (icmp_hook != NULL) {
                 pfil_remove_hook(icmp_hook);
-                printf("ICMP block hook removed.\n");
-            }
-            if (custom_pfil_head) {
-                pfil_head_unregister(custom_pfil_head);
-                printf("Custom PFIL head unregistered.\n");
+                printf("ICMP Block Module unloaded.\n");
             }
             break;
 
         default:
-            error = EOPNOTSUPP;
+            return EOPNOTSUPP;
     }
-
-    return error;
+    return 0;
 }
 
 static moduledata_t icmp_block_mod = {
     "icmp_block",      // Module name
-    module_handler,      // Event handler
+    load_handler,      // Event handler
     NULL               // Extra data
 };
 
