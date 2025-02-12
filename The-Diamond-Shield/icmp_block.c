@@ -49,7 +49,7 @@ static int load_handler(module_t mod, int event_type, void *arg) {
         case MOD_LOAD:
             bzero(&pha, sizeof(pha));
             pha.pa_version = PFIL_VERSION;
-            pha.pa_flags = PFIL_IN;
+            pha.pa_flags = PFIL_IN | PFIL_HOOKPTR;
             pha.pa_type = PFIL_TYPE_IP4;
             pha.pa_func = icmp_block_hook;
             pha.pa_ruleset = NULL;
