@@ -6,7 +6,7 @@
 #include <netinet/in.h>
 #include <netinet/ip.h>
 #include <netinet/ip_icmp.h>
-#include <net/pfil.c>
+#include <net/pfil.h>
 #include <sys/mbuf.h>
 
 static unsigned int icmp_dropped = 0;
@@ -44,7 +44,7 @@ static struct pfil_hook *icmp_hook = NULL;
 /* Module Load/Unload Handler */
 static int load_handler(module_t mod, int event_type, void *arg) {
     struct pfil_hook_args pha;
-    struct pfilioc_link req;
+    struct pfil_link_args pla;
 
     switch (event_type) {
         case MOD_LOAD:
@@ -64,12 +64,12 @@ static int load_handler(module_t mod, int event_type, void *arg) {
                 return EFAULT;
             }
 
-            strcpy(req.pio_name, "inet");
-            strcpy(req.pio_module, pha.pa_modname);
-            strcpy(req.pio_ruleset, pha.pa_rulname);
-            req.pio_flags = PFIL_IN | PFIL_OUT;
+            pla.pa_version = PFIL_VERSION;
+            pla.pa_flags = PFIL_IN | PFIL_HOOKPTR;
+            pla.pa_headname = "inet";
+            pla.pa_hook = icmp_hook;
 
-            if (pfilioc_link(&req) != 0) {
+            if (pfil_link(&pla) != 0) {
                 printf("Failed to link ICMP block hook.\n");
                 pfil_remove_hook(icmp_hook);
                 return EFAULT;
