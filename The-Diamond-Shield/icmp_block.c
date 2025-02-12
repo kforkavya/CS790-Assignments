@@ -13,14 +13,14 @@ static unsigned int icmp_dropped = 0;
 static unsigned int total_dropped_size = 0;
 
 /* Hook Function */
-static pfil_return_t icmp_block_hook(pfil_packet_t *pkt, struct ifnet *ifp, int dir, void *arg, struct inpcb *inp) {
+static pfil_return_t icmp_block_hook(pfil_packet_t pkt, struct ifnet *ifp, int dir, void *arg, struct inpcb *inp) {
     struct mbuf *m;
     struct ip *ip_hdr;
     struct icmp *icmp_hdr;
     
     printf("ICMP Block Hook says Hi\n");
     
-    m = pkt->m;
+    m = pkt.m;
     if (m == NULL) return PFIL_PASS;
 
     if (dir != PFIL_IN) return PFIL_PASS;  // Only process incoming packets
@@ -50,7 +50,7 @@ static int load_handler(module_t mod, int event_type, void *arg) {
         case MOD_LOAD:
             bzero(&pha, sizeof(pha));
             pha.pa_version = PFIL_VERSION;
-            pha.pa_flags = PFIL_IN;  // Removed PFIL_HEADPTR
+            pha.pa_flags = PFIL_IN;
             pha.pa_type = PFIL_TYPE_IP4;
             pha.pa_func = icmp_block_hook;
             pha.pa_ruleset = NULL;
