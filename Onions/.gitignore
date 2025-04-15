@@ -4,3 +4,5 @@
 *.synctex.gz
 *.fls
 *.pyc
+*.txt
+!imp_info.txt
