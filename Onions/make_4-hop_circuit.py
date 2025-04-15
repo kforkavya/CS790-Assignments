@@ -28,22 +28,21 @@ def query(url):
 
 print("[*] Launching Tor with custom config...")
 
-tor_process = launch_tor_with_config(
-    config={
-        'ControlPort': '9051',
-        'CookieAuthentication': '0',
-        '__LeaveStreamsUnattached': '1',
-        'CircuitBuildTimeout': '60',
-        'LearnCircuitBuildTimeout': '0',
-    },
-    init_msg_handler=lambda line: print("[tor] " + line),
-)
-
 def connect(task_num):
     if (task_num != 1 and task_num != 2):
         print("[-] Invalid task number. Use 1 or 2.")
         exit(1)
     try:
+        tor_process = launch_tor_with_config(
+            config={
+                'ControlPort': '9051',
+                'CookieAuthentication': '0',
+                '__LeaveStreamsUnattached': '1',
+                'CircuitBuildTimeout': '60',
+                'LearnCircuitBuildTimeout': '0',
+            },
+            init_msg_handler=lambda line: print("[tor] " + line),
+        )
         with Controller.from_port(port=9051) as controller:
             controller.authenticate()
             print("\n[*] Connected to Tor ControlPort.")

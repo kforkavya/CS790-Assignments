@@ -1,0 +1,6 @@
+*.aux
+*.fdb*
+*.log
+*.synctex.gz
+*.fls
+*.pyc
